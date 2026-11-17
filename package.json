@@ -1,0 +1,23 @@
+{
+  "name": "code-agent-worker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Worker de JOLUP que toma tareas de la cola, ejecuta Claude Code sobre el repo y abre un Pull Request",
+  "main": "dist/main.js",
+  "scripts": {
+    "dev": "tsx --env-file-if-exists=.env src/main.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/main.js",
+    "type-check": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vitest": "^5.1.0"
+  }
+}
