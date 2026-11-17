@@ -6,11 +6,12 @@ import type { SourceRepository } from "../../domain/ports/source-repository.port
 import type { TextRedactor } from "../../domain/ports/text-redactor.port";
 import type { Workspace } from "../../domain/ports/workspace.port";
 
-/** Puertos que necesita el pipeline de una ejecución (pasos de clonar a abrir el PR). */
+/** Puertos que necesita el pipeline de una ejecución (pasos de clonar a abrir los PRs). */
 export interface RunPipelineDependencies {
   sourceRepository: SourceRepository;
   codeAgent: CodeAgent;
   pullRequestPublisher: PullRequestPublisher;
+  logger: Logger;
 }
 
 /** Todo lo que se inyecta en el caso de uso que procesa la cola. */
@@ -18,6 +19,5 @@ export interface ProcessNextRunDependencies extends RunPipelineDependencies {
   runQueue: RunQueue;
   workspace: Workspace;
   redactor: TextRedactor;
-  logger: Logger;
   heartbeatIntervalMs: number;
 }

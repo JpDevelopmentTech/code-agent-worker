@@ -12,8 +12,8 @@ import { withMetrics } from "../services/with-metrics";
 import { toFailedReport } from "../services/to-failed-report";
 
 /**
- * Caso de uso: toma la siguiente ejecución de la cola, la lleva hasta un PR
- * (o hasta un fallo explicado) e informa al backend. Una ejecución por llamada.
+ * Caso de uso: toma la siguiente ejecución de la cola, la lleva hasta uno o
+ * varios PRs (o hasta un fallo explicado) e informa al backend. Una ejecución por llamada.
  * Si la ejecución se aborta (heartbeat perdido o apagado) no informa nada:
  * el backend la devuelve a la cola cuando vence el bloqueo.
  */
@@ -29,6 +29,7 @@ export class ProcessNextRunUseCase {
       runId: run.id,
       taskId: run.task.id,
       repository: run.repository.fullName,
+      repositories: run.repositories.map((repository) => repository.fullName).join(", "),
       attempts: run.attempts,
     });
 

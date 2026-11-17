@@ -49,4 +49,11 @@ describe("buildTaskPrompt", () => {
     expect(prompt).toContain("NO cambies de rama");
     expect(prompt).toContain("Conventional Commits");
   });
+
+  it("should not let a placeholder written in the title swallow the description", () => {
+    const prompt = buildTaskPrompt({ ...task, title: "Usa {{DESCRIPCION}} aquí" });
+
+    expect(prompt).toContain("<titulo_de_la_tarea>\nUsa {{DESCRIPCION}} aquí\n</titulo_de_la_tarea>");
+    expect(prompt).toContain("<descripcion_de_la_tarea>\nEl campo email debe ser obligatorio.\n</descripcion_de_la_tarea>");
+  });
 });

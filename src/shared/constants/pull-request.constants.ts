@@ -6,3 +6,6 @@ export const PR_REVIEW_NOTE = "PR generado por el agente de JOLUP. Revísalo ant
 
 /** Texto del resumen cuando Claude no devuelve ninguno. */
 export const EMPTY_AGENT_SUMMARY = "Claude Code no devolvió un resumen.";
+
+/** Título de la sección que enlaza entre sí los PRs de una misma tarea. */
+export const PR_RELATED_SECTION_TITLE = "## PRs de esta misma tarea";

@@ -4,13 +4,15 @@ import type { CodeAgent, CodeAgentRequest } from "../domain/ports/code-agent.por
 /** Agente cuyo comportamiento decide cada test. */
 export class FakeCodeAgent implements CodeAgent {
   readonly prompts: string[] = [];
+  readonly workingDirectories: string[] = [];
 
   /** Recibe la función que simula la ejecución del agente. */
   constructor(private readonly behavior: (request: CodeAgentRequest) => Promise<AgentResult>) {}
 
-  /** Guarda el prompt y delega en el comportamiento configurado. */
+  /** Guarda el prompt y el directorio, y delega en el comportamiento configurado. */
   async run(request: CodeAgentRequest): Promise<AgentResult> {
     this.prompts.push(request.prompt);
+    this.workingDirectories.push(request.workingDirectory);
     return this.behavior(request);
   }
 }

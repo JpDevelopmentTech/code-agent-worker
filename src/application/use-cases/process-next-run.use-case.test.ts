@@ -3,7 +3,7 @@ import { RunStepError } from "../../domain/errors/run-step.error";
 import { buildUseCaseHarness } from "../../test-support/build-use-case";
 import { waitUntilAborted } from "../../test-support/fake-code-agent";
 import { FAKE_SECRET } from "../../test-support/fake-redactor";
-import { buildRun } from "../../test-support/run-fixture";
+import { buildRun, MAIN_REPOSITORY_ID } from "../../test-support/run-fixture";
 
 const noShutdown = (): AbortSignal => new AbortController().signal;
 
@@ -40,6 +40,9 @@ describe("ProcessNextRunUseCase", () => {
           outcome: "done",
           prUrl: "https://github.com/jpdev/demo/pull/42",
           summary: "Añadí la validación y pasé los tests.",
+          repositories: [
+            { repositoryId: MAIN_REPOSITORY_ID, outcome: "pr_opened", prUrl: "https://github.com/jpdev/demo/pull/42" },
+          ],
         },
       },
     ]);
@@ -59,6 +62,7 @@ describe("ProcessNextRunUseCase", () => {
       outcome: "failed",
       error: "El agente no hizo cambios.",
       summary: "La tarea es ambigua; no hice cambios.",
+      repositories: [{ repositoryId: MAIN_REPOSITORY_ID, outcome: "no_changes" }],
     });
     expect(harness.repository.calls).not.toContain("push jolup/tarea-123");
     expect(harness.publisher.drafts).toEqual([]);
@@ -196,5 +200,28 @@ describe("ProcessNextRunUseCase", () => {
     expect(status).toBe("done");
     expect(harness.queue.finished).toHaveLength(1);
     expect(harness.logger.entries.some((entry) => entry.message === "No se pudo subir la transcripción")).toBe(true);
+  });
+
+  it("should clone into a subfolder and run Claude inside the clone when there is a single repository", async () => {
+    const harness = buildUseCaseHarness({ run: buildRun() });
+
+    await harness.useCase.execute(noShutdown());
+
+    expect(harness.repository.clonedDirectories).toEqual(["/tmp/fake/run-1/demo"]);
+    expect(harness.agent.workingDirectories).toEqual(["/tmp/fake/run-1/demo"]);
+    expect(harness.publisher.bodyUpdates).toEqual([]);
+  });
+
+  it("should leave repositories out of the report when the backend did not send their ids", async () => {
+    const run = buildRun();
+    const harness = buildUseCaseHarness({ run: { ...run, repositories: [run.repository] } });
+
+    await harness.useCase.execute(noShutdown());
+
+    expect(harness.queue.finished[0]?.report).toEqual({
+      outcome: "done",
+      prUrl: "https://github.com/jpdev/demo/pull/42",
+      summary: "Añadí la validación y pasé los tests.",
+    });
   });
 });
