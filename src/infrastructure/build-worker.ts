@@ -49,6 +49,7 @@ export function buildWorker(env: WorkerEnv, processEnv: NodeJS.ProcessEnv): Buil
       timeoutMs: env.RUN_TIMEOUT_MS,
       baseEnv,
       ...(env.CLAUDE_MODEL === undefined ? {} : { model: env.CLAUDE_MODEL }),
+      ...(env.CLAUDE_EFFORT === undefined ? {} : { effort: env.CLAUDE_EFFORT }),
       ...(env.CLAUDE_MAX_TURNS === undefined ? {} : { maxTurns: env.CLAUDE_MAX_TURNS }),
     }),
     pullRequestPublisher: new GithubPullRequestPublisher(env.GITHUB_TOKEN),

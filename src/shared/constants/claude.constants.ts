@@ -25,3 +25,9 @@ export const CLAUDE_MODEL_FLAG = "--model";
 
 /** Bandera para limitar los turnos del agente. */
 export const CLAUDE_MAX_TURNS_FLAG = "--max-turns";
+
+/** Bandera para fijar cuánto razona el modelo en la sesión. */
+export const CLAUDE_EFFORT_FLAG = "--effort";
+
+/** Niveles de esfuerzo que acepta Claude Code. */
+export const CLAUDE_EFFORT_LEVELS = ["low", "medium", "high", "xhigh", "max"] as const;

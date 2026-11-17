@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { emptyToUndefined } from "../../shared/utils/empty-to-undefined";
+import { CLAUDE_EFFORT_LEVELS } from "../../shared/constants/claude.constants";
 
 /** Entero positivo leído de una variable de entorno, con valor por defecto. */
 const positiveInt = (fallback: number) =>
@@ -19,6 +20,7 @@ const envSchema = z.object({
   HEARTBEAT_INTERVAL_MS: positiveInt(120_000),
   RUN_TIMEOUT_MS: positiveInt(2_700_000),
   CLAUDE_MODEL: z.preprocess(emptyToUndefined, z.string().optional()),
+  CLAUDE_EFFORT: z.preprocess(emptyToUndefined, z.enum(CLAUDE_EFFORT_LEVELS).optional()),
   CLAUDE_MAX_TURNS: z.preprocess(emptyToUndefined, z.coerce.number().int().positive().optional()),
   WORK_DIR: textWithDefault("/tmp/code-agent-runs"),
   GIT_AUTHOR_NAME: textWithDefault("JOLUP Agent"),
