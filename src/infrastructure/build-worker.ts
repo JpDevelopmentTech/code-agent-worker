@@ -7,6 +7,7 @@ import { GitCliRepository } from "./git/git-cli.repository";
 import { GithubPullRequestPublisher } from "./github/github-pull-request.publisher";
 import { BackendHttpClient } from "./http/backend-http.client";
 import { JolupRunQueueClient } from "./http/jolup-run-queue.client";
+import { readAgentRules } from "./config/read-agent-rules";
 import { JsonLogger } from "./logging/json-logger";
 import { readChildBaseEnv } from "./process/read-child-base-env";
 import { SecretRedactor } from "./security/secret-redactor";
@@ -33,6 +34,7 @@ export function buildWorker(env: WorkerEnv, processEnv: NodeJS.ProcessEnv): Buil
   ]);
   const logger = new JsonLogger(redactor);
   const baseEnv = readChildBaseEnv(processEnv);
+  const agentRules = readAgentRules(env.CLAUDE_AGENT_RULES_FILE);
   const useCase = new ProcessNextRunUseCase({
     runQueue: new JolupRunQueueClient(
       new BackendHttpClient(env.JOLUP_API_URL, env.CODE_AGENT_WORKER_TOKEN),
@@ -50,6 +52,7 @@ export function buildWorker(env: WorkerEnv, processEnv: NodeJS.ProcessEnv): Buil
       baseEnv,
       ...(env.CLAUDE_MODEL === undefined ? {} : { model: env.CLAUDE_MODEL }),
       ...(env.CLAUDE_EFFORT === undefined ? {} : { effort: env.CLAUDE_EFFORT }),
+      ...(agentRules === undefined ? {} : { appendSystemPrompt: agentRules }),
       ...(env.CLAUDE_MAX_TURNS === undefined ? {} : { maxTurns: env.CLAUDE_MAX_TURNS }),
     }),
     pullRequestPublisher: new GithubPullRequestPublisher(env.GITHUB_TOKEN),

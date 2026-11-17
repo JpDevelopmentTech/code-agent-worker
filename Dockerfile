@@ -18,7 +18,7 @@ RUN pnpm prune --prod --ignore-scripts
 FROM node:24-slim
 ARG CLAUDE_CODE_VERSION=latest
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends git ca-certificates tini \
+  && apt-get install -y --no-install-recommends git ca-certificates tini python3 python-is-python3 \
   && rm -rf /var/lib/apt/lists/*
 # corepack deja disponibles pnpm y yarn para los repos que clone el agente.
 RUN corepack enable
@@ -34,6 +34,13 @@ RUN mkdir -p "$WORK_DIR" /home/node/.claude && chown node:node "$WORK_DIR" /home
 # Convenciones de JP Development para todos los repos: Claude Code lee
 # ~/.claude/CLAUDE.md en cada sesión, además del CLAUDE.md del propio repo.
 COPY --chown=node:node agent-config/CLAUDE.md /home/node/.claude/CLAUDE.md
+# Skills generales del agente (ux-review, ui-ux-pro-max, frontend-design).
+# python3 está arriba porque los scripts de ui-ux-pro-max lo necesitan.
+COPY --chown=node:node agent-config/skills /home/node/.claude/skills
+# Reglas del agente (modo autónomo y cuándo usar las skills): el worker las lee
+# al arrancar y se las pasa a Claude como parte del system prompt.
+COPY agent-config/agent-rules.md /opt/code-agent/agent-rules.md
+ENV CLAUDE_AGENT_RULES_FILE=/opt/code-agent/agent-rules.md
 # Claude Code se niega a usar --dangerously-skip-permissions como root.
 USER node
 # tini como PID 1: recoge los procesos huérfanos que dejen los tests o servidores

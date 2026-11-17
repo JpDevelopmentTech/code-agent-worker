@@ -20,4 +20,11 @@ describe("buildClaudeArgs", () => {
       "medium",
     ]);
   });
+
+  it("should append the agent rules to the system prompt when they are loaded", () => {
+    expect(buildClaudeArgs({ appendSystemPrompt: "Reglas" }).slice(-2)).toEqual([
+      "--append-system-prompt",
+      "Reglas",
+    ]);
+  });
 });

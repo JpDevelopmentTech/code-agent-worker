@@ -21,6 +21,8 @@ const envSchema = z.object({
   RUN_TIMEOUT_MS: positiveInt(2_700_000),
   CLAUDE_MODEL: z.preprocess(emptyToUndefined, z.string().optional()),
   CLAUDE_EFFORT: z.preprocess(emptyToUndefined, z.enum(CLAUDE_EFFORT_LEVELS).optional()),
+  /** Archivo con las reglas del agente que se añaden al system prompt; la imagen lo trae. */
+  CLAUDE_AGENT_RULES_FILE: z.preprocess(emptyToUndefined, z.string().optional()),
   CLAUDE_MAX_TURNS: z.preprocess(emptyToUndefined, z.coerce.number().int().positive().optional()),
   WORK_DIR: textWithDefault("/tmp/code-agent-runs"),
   GIT_AUTHOR_NAME: textWithDefault("JOLUP Agent"),

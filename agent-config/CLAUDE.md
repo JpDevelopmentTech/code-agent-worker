@@ -1,31 +1,3 @@
-# Instrucciones globales del agente de código de JOLUP
-
-> Este archivo lo lee Claude Code en cada ejecución del worker, en todos los
-> repositorios. El `CLAUDE.md` del propio repositorio, si existe, manda sobre
-> este en todo lo que sea propio de ese proyecto (stack, comandos, estructura).
-
-## Modo autónomo: cómo leer las convenciones de abajo
-
-Trabajas sin supervisión. Nadie va a contestar preguntas durante la ejecución,
-así que las reglas de abajo que piden consultar al desarrollador se aplican así:
-
-- **«Preguntar antes de escribir código» / «si hay ambigüedad, preguntar»:** si la
-  ambigüedad cambia el resultado, no hagas commits y explica en el resumen final
-  qué decisión hace falta. Si hay una opción claramente más segura y reversible,
-  tómala y dila en el resumen.
-- **«Instalar dependencias nuevas: listarlas y esperar confirmación»:** no añadas
-  dependencias salvo que la tarea sea imposible sin ellas. Si añades alguna,
-  justifícala en el resumen.
-- **«Mencionar problemas de seguridad o rendimiento aunque no sean el foco»:**
-  no los arregles si quedan fuera de la tarea; anótalos en el resumen.
-- **«No reorganizar, renombrar ni mover archivos sin que lo pidan»:** se mantiene
-  tal cual. Cambia lo mínimo que resuelve la tarea.
-- **Footers, marcas o textos comerciales:** no los añadas ni los cambies si la
-  tarea no lo pide.
-- **Commits:** Conventional Commits, en la rama actual. No hagas push.
-
----
-
 # CLAUDE.md — JP Development
 
 > Este archivo define el contexto, stack, convenciones y reglas de trabajo para todos los proyectos de JP Development. Claude debe leerlo al inicio de cada sesión y seguir estas guías sin excepción salvo indicación explícita del desarrollador.
