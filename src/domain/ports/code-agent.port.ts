@@ -5,6 +5,11 @@ export interface CodeAgentRequest {
   workingDirectory: string;
   prompt: string;
   signal: AbortSignal;
+  /**
+   * Recibe la transcripción de la sesión en cuanto el agente termina, también
+   * cuando falla: es justo el caso en que más interesa ver qué hizo.
+   */
+  onTranscript?: (transcript: string) => void;
 }
 
 /** Agente de código que implementa una tarea dentro de un repositorio clonado. */

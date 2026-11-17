@@ -15,7 +15,7 @@ export function sanitizeReport(report: RunFinishReport, redactor: TextRedactor):
   const summary =
     report.summary === undefined ? undefined : clean(report.summary, MAX_SUMMARY_LENGTH);
   return {
-    outcome: "failed",
+    ...report,
     error: clean(report.error, MAX_ERROR_LENGTH),
     ...(summary === undefined ? {} : { summary }),
   };

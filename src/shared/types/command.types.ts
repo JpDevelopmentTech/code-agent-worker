@@ -10,6 +10,8 @@ export interface CommandRequest {
   stdin?: string;
   timeoutMs: number;
   signal: AbortSignal;
+  /** Tope de bytes de stdout que se conservan; por defecto el general. */
+  maxStdoutBytes?: number;
 }
 
 /** Cómo terminó un proceso hijo. Nunca se lanza: el llamador interpreta el resultado. */

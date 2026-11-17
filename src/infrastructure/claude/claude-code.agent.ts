@@ -1,7 +1,7 @@
 import type { AgentResult } from "../../domain/entities/agent-result.entity";
 import { RunStepError } from "../../domain/errors/run-step.error";
 import type { CodeAgent, CodeAgentRequest } from "../../domain/ports/code-agent.port";
-import { CLAUDE_BINARY } from "../../shared/constants/claude.constants";
+import { CLAUDE_BINARY, CLAUDE_MAX_OUTPUT_BYTES } from "../../shared/constants/claude.constants";
 import { STDERR_TAIL_LENGTH } from "../../shared/constants/process.constants";
 import type { ChildBaseEnv } from "../../shared/types/child-base-env.types";
 import type { CommandResult } from "../../shared/types/command.types";
@@ -24,7 +24,10 @@ export class ClaudeCodeAgent implements CodeAgent {
   /** Recibe la configuración ya validada. */
   constructor(private readonly options: ClaudeCodeAgentOptions) {}
 
-  /** Lanza Claude en el clon con el prompt por stdin e interpreta su salida. */
+  /**
+   * Lanza Claude en el clon con el prompt por stdin e interpreta su salida.
+   * Entrega la transcripción (stdout en stream-json) antes de decidir si falló.
+   */
   async run(request: CodeAgentRequest): Promise<AgentResult> {
     const result = await runCommand({
       command: CLAUDE_BINARY,
@@ -34,7 +37,9 @@ export class ClaudeCodeAgent implements CodeAgent {
       stdin: request.prompt,
       timeoutMs: this.options.timeoutMs,
       signal: request.signal,
+      maxStdoutBytes: CLAUDE_MAX_OUTPUT_BYTES,
     });
+    if (result.stdout.trim() !== "") request.onTranscript?.(result.stdout);
     if (result.exitCode !== 0 || result.timedOut || result.aborted) {
       throw new RunStepError(this.describeFailure(result));
     }

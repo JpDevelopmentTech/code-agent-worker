@@ -1,3 +1,4 @@
+import { gzipSync } from "node:zlib";
 import type { CodeAgentRun } from "../../domain/entities/code-agent-run.entity";
 import type { FinishStatus, HeartbeatStatus } from "../../domain/entities/heartbeat-status.entity";
 import type { RunFinishReport } from "../../domain/entities/run-finish-report.entity";
@@ -11,6 +12,8 @@ import {
   HTTP_OK,
   MAX_ERROR_BODY_LENGTH,
   RUNS_PATH,
+  TRANSCRIPT_CONTENT_TYPE,
+  TRANSCRIPT_SUFFIX,
 } from "../../shared/constants/backend-api.constants";
 import { parseJsonOrUndefined } from "../../shared/utils/parse-json-or-undefined";
 import { tailText } from "../../shared/utils/tail-text";
@@ -41,6 +44,16 @@ export class JolupRunQueueClient implements RunQueue {
     const response = await this.http.post(path);
     if (response.status === HTTP_NO_CONTENT) return "alive";
     if (response.status === HTTP_CONFLICT) return "lost";
+    throw this.unexpected(path, response);
+  }
+
+  /** `POST /runs/:id/transcript` con el JSONL en gzip: 204 → guardada; 409 → ya no estaba en marcha. */
+  async uploadTranscript(runId: string, transcript: string): Promise<FinishStatus> {
+    const path = this.runPath(runId, TRANSCRIPT_SUFFIX);
+    const body = gzipSync(Buffer.from(transcript, "utf8"));
+    const response = await this.http.postBinary(path, body, TRANSCRIPT_CONTENT_TYPE);
+    if (response.status === HTTP_NO_CONTENT) return "recorded";
+    if (response.status === HTTP_CONFLICT) return "conflict";
     throw this.unexpected(path, response);
   }
 

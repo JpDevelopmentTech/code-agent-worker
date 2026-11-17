@@ -12,7 +12,7 @@ import { signalProcessGroup } from "./signal-process-group";
  * tiempo máximo y la cancelación, y resuelve una sola vez con el resultado.
  */
 export class CommandExecution {
-  private readonly stdout = new OutputBuffer(MAX_CAPTURED_OUTPUT_BYTES);
+  private readonly stdout: OutputBuffer;
   private readonly stderr = new OutputBuffer(MAX_CAPTURED_OUTPUT_BYTES);
   private timedOut = false;
   private aborted = false;
@@ -30,7 +30,9 @@ export class CommandExecution {
   constructor(
     private readonly request: CommandRequest,
     private readonly resolve: (result: CommandResult) => void,
-  ) {}
+  ) {
+    this.stdout = new OutputBuffer(request.maxStdoutBytes ?? MAX_CAPTURED_OUTPUT_BYTES);
+  }
 
   /** Lanza el proceso como líder de su propio grupo y conecta todos los eventos. */
   run(): void {

@@ -10,6 +10,10 @@ export const RUNS_PATH = "/runs";
 /** Sufijos de las rutas de una ejecución. */
 export const HEARTBEAT_SUFFIX = "/heartbeat";
 export const FINISH_SUFFIX = "/finish";
+export const TRANSCRIPT_SUFFIX = "/transcript";
+
+/** La transcripción viaja comprimida: un JSONL de varios MB queda en unos cientos de KB. */
+export const TRANSCRIPT_CONTENT_TYPE = "application/gzip";
 
 /** Tiempo máximo de cada llamada al backend. */
 export const BACKEND_REQUEST_TIMEOUT_MS = 30_000;

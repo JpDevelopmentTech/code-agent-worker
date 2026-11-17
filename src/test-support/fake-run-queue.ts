@@ -6,6 +6,10 @@ import type { RunQueue } from "../domain/ports/run-queue.port";
 /** Cola en memoria: entrega una ejecución (o ninguna) y guarda lo que recibe. */
 export class FakeRunQueue implements RunQueue {
   readonly finished: Array<{ runId: string; report: RunFinishReport }> = [];
+  readonly transcripts: Array<{ runId: string; transcript: string }> = [];
+  /** Orden de las llamadas de subida y cierre, para comprobar que la transcripción va antes. */
+  readonly calls: string[] = [];
+  uploadError: Error | undefined;
   heartbeats = 0;
   heartbeatStatus: HeartbeatStatus = "alive";
   finishStatus: FinishStatus = "recorded";
@@ -26,8 +30,17 @@ export class FakeRunQueue implements RunQueue {
     return this.heartbeatStatus;
   }
 
+  /** Guarda la transcripción recibida, o falla si el test lo pide. */
+  async uploadTranscript(runId: string, transcript: string): Promise<FinishStatus> {
+    this.calls.push("transcript");
+    if (this.uploadError !== undefined) throw this.uploadError;
+    this.transcripts.push({ runId, transcript });
+    return "recorded";
+  }
+
   /** Guarda el informe recibido. */
   async finish(runId: string, report: RunFinishReport): Promise<FinishStatus> {
+    this.calls.push("finish");
     this.finished.push({ runId, report });
     return this.finishStatus;
   }

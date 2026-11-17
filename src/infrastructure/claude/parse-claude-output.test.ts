@@ -27,6 +27,21 @@ describe("parseClaudeOutput", () => {
     expect(parseClaudeOutput(stdout).summary).toBe("Hice el cambio y los tests pasan.");
   });
 
+  it("should read the result event from a stream-json transcript", () => {
+    const stdout = [
+      JSON.stringify({ type: "system", subtype: "init" }),
+      JSON.stringify({ type: "assistant", message: { content: [{ type: "text", text: "Leo el repo" }] } }),
+      JSON.stringify({ ...success, type: "result", num_turns: 7, total_cost_usd: 0.42 }),
+      "",
+    ].join("\n");
+
+    expect(parseClaudeOutput(stdout)).toEqual({
+      summary: "Hice el cambio y los tests pasan.",
+      turns: 7,
+      costUsd: 0.42,
+    });
+  });
+
   it("should use a default summary when Claude returns no result", () => {
     const { result: _ignored, ...withoutResult } = success;
 

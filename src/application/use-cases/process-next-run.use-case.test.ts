@@ -149,4 +149,52 @@ describe("ProcessNextRunUseCase", () => {
     const report = harness.queue.finished[0]?.report;
     expect(report?.outcome === "done" ? report.summary.length : 0).toBe(4000);
   });
+
+  it("should upload the redacted transcript before finishing and report the metrics", async () => {
+    const harness = buildUseCaseHarness({
+      run: buildRun(),
+      agent: async (request) => {
+        request.onTranscript?.(`{"type":"assistant","text":"uso ${FAKE_SECRET}"}`);
+        return { summary: "Hecho.", turns: 5, costUsd: 0.3 };
+      },
+    });
+
+    await harness.useCase.execute(noShutdown());
+
+    expect(harness.queue.calls).toEqual(["transcript", "finish"]);
+    expect(harness.queue.transcripts[0]?.transcript).toBe('{"type":"assistant","text":"uso [REDACTADO]"}');
+    expect(harness.queue.finished[0]?.report).toMatchObject({ outcome: "done", numTurns: 5, costUsd: 0.3 });
+  });
+
+  it("should keep the transcript when the agent fails after producing it", async () => {
+    const harness = buildUseCaseHarness({
+      run: buildRun(),
+      agent: async (request) => {
+        request.onTranscript?.('{"type":"result","is_error":true}');
+        throw new RunStepError("Claude Code terminó con error.");
+      },
+    });
+
+    await harness.useCase.execute(noShutdown());
+
+    expect(harness.queue.transcripts).toHaveLength(1);
+    expect(harness.queue.finished[0]?.report).toMatchObject({ outcome: "failed" });
+  });
+
+  it("should still finish the run when the transcript upload fails", async () => {
+    const harness = buildUseCaseHarness({
+      run: buildRun(),
+      agent: async (request) => {
+        request.onTranscript?.("{}");
+        return { summary: "Hecho." };
+      },
+    });
+    harness.queue.uploadError = new Error("red caída");
+
+    const status = await harness.useCase.execute(noShutdown());
+
+    expect(status).toBe("done");
+    expect(harness.queue.finished).toHaveLength(1);
+    expect(harness.logger.entries.some((entry) => entry.message === "No se pudo subir la transcripción")).toBe(true);
+  });
 });

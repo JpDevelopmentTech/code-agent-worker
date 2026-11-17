@@ -7,9 +7,9 @@ import { tailText } from "../../shared/utils/tail-text";
 import { type ClaudeOutput, claudeOutputSchema } from "./claude-output.schema";
 
 /**
- * Lee el JSON de stdout. Si hay ruido antes (avisos, líneas sueltas), prueba
- * con la última línea no vacía, que es donde Claude escribe el resultado.
- * Devuelve `undefined` si nada es JSON.
+ * Lee el resultado de stdout. Con `stream-json` cada línea es un evento y el
+ * resultado es la última línea no vacía; con `json` todo stdout es un objeto.
+ * Prueba las dos formas y devuelve `undefined` si nada es JSON.
  */
 function readJson(stdout: string): unknown {
   const trimmed = stdout.trim();

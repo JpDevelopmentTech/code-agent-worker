@@ -24,15 +24,26 @@ export class BackendHttpClient {
   }
 
   /** Hace un POST con body JSON opcional; lanza `BackendRequestError` si falla la red. */
-  async post(path: string, body?: unknown): Promise<BackendResponse> {
+  post(path: string, body?: unknown): Promise<BackendResponse> {
+    return this.send(path, "application/json", body === undefined ? undefined : JSON.stringify(body));
+  }
+
+  /** Hace un POST con un cuerpo binario ya preparado (por ejemplo, gzip). */
+  postBinary(path: string, body: Buffer, contentType: string): Promise<BackendResponse> {
+    return this.send(path, contentType, new Uint8Array(body));
+  }
+
+  /** Envía el POST autenticado con un tiempo máximo y consume la respuesta. */
+  private async send(
+    path: string,
+    contentType: string,
+    body: string | Uint8Array | undefined,
+  ): Promise<BackendResponse> {
     try {
       const response = await fetch(`${this.baseUrl}${path}`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${this.workerToken}`,
-          "Content-Type": "application/json",
-        },
-        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+        headers: { Authorization: `Bearer ${this.workerToken}`, "Content-Type": contentType },
+        ...(body === undefined ? {} : { body }),
         signal: AbortSignal.timeout(BACKEND_REQUEST_TIMEOUT_MS),
       });
       return { status: response.status, bodyText: await response.text() };

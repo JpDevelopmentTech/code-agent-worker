@@ -1,4 +1,5 @@
 import type { CodeAgentRun } from "../../domain/entities/code-agent-run.entity";
+import type { RunArtifacts } from "../../domain/entities/run-artifacts.entity";
 import type { RunFinishReport } from "../../domain/entities/run-finish-report.entity";
 import type { RunProcessingStatus } from "../../domain/entities/run-processing-status.entity";
 import { ABORT_REASON_LOST, ABORT_REASON_SHUTDOWN } from "../../shared/constants/run.constants";
@@ -7,6 +8,7 @@ import type { ProcessNextRunDependencies } from "../interfaces/process-next-run.
 import { executeRunPipeline } from "../services/execute-run-pipeline";
 import { RunHeartbeat } from "../services/run-heartbeat";
 import { sanitizeReport } from "../services/sanitize-report";
+import { withMetrics } from "../services/with-metrics";
 import { toFailedReport } from "../services/to-failed-report";
 
 /**
@@ -44,7 +46,8 @@ export class ProcessNextRunUseCase {
     heartbeat.start();
 
     try {
-      const report = await this.runSafely(run, controller.signal);
+      const artifacts: RunArtifacts = {};
+      const report = await this.runSafely(run, controller.signal, artifacts);
       if (controller.signal.aborted) {
         this.deps.logger.warn("Ejecución abortada; no se informa al backend", {
           runId: run.id,
@@ -52,7 +55,8 @@ export class ProcessNextRunUseCase {
         });
         return "aborted";
       }
-      await this.report(run.id, report);
+      await this.uploadTranscript(run.id, artifacts.transcript);
+      await this.report(run.id, withMetrics(report, artifacts));
       return report.outcome;
     } finally {
       heartbeat.stop();
@@ -61,11 +65,15 @@ export class ProcessNextRunUseCase {
   }
 
   /** Corre el pipeline en un directorio temporal y lo borra pase lo que pase. */
-  private async runSafely(run: CodeAgentRun, signal: AbortSignal): Promise<RunFinishReport> {
+  private async runSafely(
+    run: CodeAgentRun,
+    signal: AbortSignal,
+    artifacts: RunArtifacts,
+  ): Promise<RunFinishReport> {
     let directory: string | undefined;
     try {
       directory = await this.deps.workspace.create();
-      return await executeRunPipeline(this.deps, run, directory, signal);
+      return await executeRunPipeline(this.deps, run, directory, signal, artifacts);
     } catch (error) {
       return toFailedReport(error);
     } finally {
@@ -82,6 +90,22 @@ export class ProcessNextRunUseCase {
         directory,
         error: describeError(error),
       });
+    }
+  }
+
+  /**
+   * Sube la transcripción, sin secretos, antes de cerrar la ejecución. Es un
+   * extra: si falla, se registra y la ejecución se cierra igual.
+   */
+  private async uploadTranscript(runId: string, transcript: string | undefined): Promise<void> {
+    if (transcript === undefined) return;
+    try {
+      const status = await this.deps.runQueue.uploadTranscript(runId, this.deps.redactor.redact(transcript));
+      if (status === "conflict") {
+        this.deps.logger.warn("El backend no aceptó la transcripción: la ejecución ya no estaba en marcha", { runId });
+      }
+    } catch (error) {
+      this.deps.logger.error("No se pudo subir la transcripción", { runId, error: describeError(error) });
     }
   }
 

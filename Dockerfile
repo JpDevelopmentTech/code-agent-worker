@@ -30,7 +30,10 @@ WORKDIR /app
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/package.json ./
-RUN mkdir -p "$WORK_DIR" && chown node:node "$WORK_DIR"
+RUN mkdir -p "$WORK_DIR" /home/node/.claude && chown node:node "$WORK_DIR" /home/node/.claude
+# Convenciones de JP Development para todos los repos: Claude Code lee
+# ~/.claude/CLAUDE.md en cada sesión, además del CLAUDE.md del propio repo.
+COPY --chown=node:node agent-config/CLAUDE.md /home/node/.claude/CLAUDE.md
 # Claude Code se niega a usar --dangerously-skip-permissions como root.
 USER node
 # tini como PID 1: recoge los procesos huérfanos que dejen los tests o servidores

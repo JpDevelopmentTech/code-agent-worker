@@ -8,6 +8,12 @@ export interface RunQueue {
   claim(): Promise<CodeAgentRun | null>;
   /** Renueva el bloqueo de la ejecución para que el backend no la dé por perdida. */
   heartbeat(runId: string): Promise<HeartbeatStatus>;
+  /**
+   * Guarda la transcripción de la sesión del agente. Va antes de `finish`: el
+   * backend solo la acepta mientras la ejecución sigue en marcha. `conflict` si
+   * ya no lo estaba.
+   */
+  uploadTranscript(runId: string, transcript: string): Promise<FinishStatus>;
   /** Cierra la ejecución con su resultado final. */
   finish(runId: string, report: RunFinishReport): Promise<FinishStatus>;
 }
